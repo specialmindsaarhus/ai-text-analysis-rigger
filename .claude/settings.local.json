@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(tree:*)",
+      "Bash(python -m py_compile:*)",
+      "Bash(python -c:*)",
+      "Bash(pip install:*)",
+      "Bash(python main.py:*)",
+      "Bash(timeout /t 3)",
+      "Bash(nul)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(ping:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,15 @@
+# Core dependencies
+gradio>=5.49.1
+python-dotenv==1.0.0
+audioop-lts>=0.2.2  # Required for Python 3.13+
+
+# LLM Providers
+anthropic>=0.72.1
+openai>=2.7.2
+
+# Utilities
+pathlib2==2.3.7; python_version < '3.4'
+
+# Document processing
+pypdf>=6.2.0
+python-docx>=1.2.0

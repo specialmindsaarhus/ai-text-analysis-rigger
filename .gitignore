@@ -1,0 +1,38 @@
+# Environment variables (contains API keys)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Gradio cache
+gradio_cached_examples/
+
+# Output files (corrected documents)
+*_corrected.txt
+*_corrected.pdf
+*_corrected.docx
+
+# Logs
+*.log
+nul
