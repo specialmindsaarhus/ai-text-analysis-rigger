@@ -133,6 +133,30 @@ Both providers construct prompts that request JSON-formatted responses and handl
 
 The agentic loop leverages the LLM twice per iteration: once for correction, once for self-assessment. This enables iterative refinement until quality criteria are met.
 
+### Token-Efficient Style Guide Integration (RAG)
+
+To incorporate business-specific terminology and writing styles without high token costs, the system will implement a Retrieval-Augmented Generation (RAG) pipeline.
+
+**Problem**: Naively injecting a full style guide into every LLM prompt is inefficient and costly, especially as the guide grows.
+
+**Solution**: A RAG-based approach that retrieves only the most relevant style rules for a given text and injects them into the prompt. This is more scalable, token-efficient, and provides targeted context to the AI.
+
+**Architecture**:
+- **Knowledge Source**: A `style_guide.md` file in the project root will store all custom rules, terminology, and style preferences.
+- **New Dependencies**:
+  - `sentence-transformers`: To generate vector embeddings for the style guide rules.
+  - `faiss-cpu`: A library for efficient similarity search that will serve as the local vector database.
+- **New Module (`src/knowledge_base.py`)**:
+  - A `KnowledgeBase` class will be responsible for the RAG pipeline.
+  - **On Startup**: It will load `style_guide.md`, split it into logical chunks (e.g., by rule or paragraph), and create a searchable FAISS vector index stored in memory.
+  - **On-Demand Retrieval**: It will provide a method `get_relevant_rules(text, top_k=3)` that takes the document text, searches the index for the most similar rules, and returns them.
+- **Integration**:
+  - The `KnowledgeBase` instance will be created at application startup.
+  - Before analysis, both `TextAnalyzer` and `AgenticAnalyzer` will call `get_relevant_rules()` with the document's content.
+  - The retrieved rules will be dynamically formatted and inserted into the LLM prompt, ensuring the AI has the precise, relevant context needed for its task.
+
+This design provides a powerful way to customize the AI's behavior without the high overhead of a full client-server architecture, making it ideal for a desktop application.
+
 ### GUI Implementation
 
 **Dual-Tab Interface** (`src/gui.py`):
@@ -205,12 +229,16 @@ Files can be saved with overwrite or `_corrected` suffix, **preserving original 
 **Core Dependencies:**
 - `gradio>=5.49.1`: Web UI framework
 - `anthropic>=0.72.1`: Claude AI API client
-- `openai>=2.7.2`: OpenAI API client
+- `openai>=2.7.2`: OpenAI AI API client
 - `python-dotenv==1.0.0`: Environment variable management
 
 **Document Processing:**
 - `pypdf>=6.2.0`: PDF text extraction
 - `python-docx>=1.2.0`: Word document handling
+
+**RAG / Vector Search:**
+- `sentence-transformers>=2.2.2`: For generating vector embeddings.
+- `faiss-cpu>=1.7.4`: For efficient local vector similarity search.
 
 **Python 3.13 Compatibility:**
 - `audioop-lts>=0.2.2`: Required for Python 3.13+ (audioop module removed from stdlib)

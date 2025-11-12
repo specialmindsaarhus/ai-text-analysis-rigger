@@ -13,3 +13,7 @@ pathlib2==2.3.7; python_version < '3.4'
 # Document processing
 pypdf>=6.2.0
 python-docx>=1.2.0
+
+# RAG / Vector Search
+sentence-transformers>=2.2.2
+faiss-cpu>=1.7.4
