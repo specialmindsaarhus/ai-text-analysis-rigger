@@ -27,6 +27,36 @@ python main.py
 
 The GUI opens at `http://127.0.0.1:7860`
 
+## Context Menu Integration (Windows)
+
+The project includes Windows integration for analyzing files directly from File Explorer without starting the GUI:
+
+### Files
+- `analyze_cli.py`: CLI wrapper that accepts file paths and runs analysis
+- `analyze_file.bat`: Batch wrapper for launching Python CLI
+- `INSTALL_SENDTO.bat`: One-click installer for "Send To" menu integration
+- `CREATE_DESKTOP_SHORTCUT.bat`: Creates desktop shortcut for drag-and-drop
+
+### Usage Methods
+
+**1. Send To Menu (Recommended):**
+- Run `INSTALL_SENDTO.bat` once to install
+- Right-click any TXT/PDF/Word file -> Send to -> "AI Text Analyze"
+- Corrected file saved with `_corrected` suffix
+
+**2. Desktop Shortcut:**
+- Run `CREATE_DESKTOP_SHORTCUT.bat` to create shortcut
+- Drag and drop files onto desktop shortcut
+- Supports multiple files and folders
+
+**3. Command Line:**
+```bash
+python analyze_cli.py "path/to/file.txt"
+python analyze_cli.py "file1.txt" "file2.pdf" "file3.docx"
+```
+
+All methods use the same analysis pipeline as the GUI but run in console mode. See `CONTEXT_MENU_GUIDE.md` for detailed instructions.
+
 ## Configuration
 
 All configuration is managed through `config.py` and `.env`:

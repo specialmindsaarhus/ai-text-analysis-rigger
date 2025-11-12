@@ -5,10 +5,16 @@ Et simpelt GUI-værktøj til at analysere og rette tekstfiler med AI. Værktøje
 ## Features
 
 - **Simpelt GUI**: Minimalt antal klik - vælg mappe, klik analyse, gem
+- **Multiple input metoder**:
+  - **GUI Mode**: Browser-baseret interface til batch processing
+  - **Context Menu**: Højreklik på fil -> "Send to" -> "AI Text Analyze" (Windows)
+  - **Desktop Shortcut**: Drag-and-drop filer på skrivebordet
+  - **Command Line**: `python analyze_cli.py filnavn.txt`
 - **To analyse modes**:
   - **Standard Mode**: Hurtig single-pass analyse
   - **Agentic Mode**: AI agenten verificerer og forbedrer sit eget arbejde i flere iterationer
-- **Batch processing**: Analyser alle .txt filer i en mappe på én gang
+- **Flere dokumentformater**: TXT, PDF, og Word (DOCX/DOC)
+- **Batch processing**: Analyser alle dokumenter i en mappe på én gang
 - **Fleksibel AI provider**: Nem switching mellem Claude AI og OpenAI
 - **Konfigurerbare parametre**: Vælg hvad der skal analyseres (grammatik, stavning, struktur, klarhed)
 - **Detaljeret feedback**: Se alle rettelser med forklaringer
@@ -85,15 +91,15 @@ Dette åbner et browser-vindue med GUI'en på `http://127.0.0.1:7860`
 #### Standard Mode (hurtig analyse)
 
 1. **Vælg "Standard Mode" tab**
-2. **Vælg mappe**: Indtast stien til mappen med dine .txt filer
+2. **Vælg mappe**: Indtast stien til mappen med dine dokumenter (TXT, PDF, Word)
 3. **Vælg parametre**: Vælg hvad der skal analyseres (grammatik, stavning, etc.)
 4. **Klik "Analyser alle filer"**: Se resultaterne
-5. **Gem rettelser**: Klik "Gem alle rettelser" for at gemme de rettede filer
+5. **Gem rettelser**: Klik "Gem alle rettelser" for at gemme de rettede filer (i samme format)
 
 #### Agentic Mode (self-verifying AI)
 
 1. **Vælg "Agentic Mode" tab**
-2. **Vælg mappe**: Indtast stien til mappen med dine .txt filer
+2. **Vælg mappe**: Indtast stien til mappen med dine dokumenter (TXT, PDF, Word)
 3. **Vælg parametre**: Vælg hvad der skal analyseres
 4. **Sæt max iterationer**: Hvor mange gange AI'en max må forbedre sit arbejde (1-5)
 5. **Klik "Analyser med AI Agent"**: AI'en vil nu:
@@ -121,6 +127,45 @@ LLM_PROVIDER=openai
 
 Genstart applikationen for at anvende ændringen.
 
+## Windows Context Menu Integration
+
+For at bruge AI Text Analysis direkte fra File Explorer (uden at starte GUI'en):
+
+### Installation af "Send To" menu (Anbefalet)
+
+1. Dobbeltklik på `INSTALL_SENDTO.bat`
+2. Vent på installationen er færdig (2-3 sekunder)
+
+**Brug:**
+- Højreklik på en fil (TXT, PDF, eller Word)
+- Vælg **Send to** > **AI Text Analyze**
+- Se resultater i console vinduet
+- Rettet fil gemmes med `_corrected` suffix
+
+### Installation af Desktop Shortcut
+
+1. Dobbeltklik på `CREATE_DESKTOP_SHORTCUT.bat`
+2. En genvej "AI Text Analyze" oprettes på skrivebordet
+
+**Brug:**
+- Træk en eller flere filer til genvejen på skrivebordet
+- Se resultater i console vinduet
+- Rettede filer gemmes med `_corrected` suffix
+
+### Command Line Brug
+
+```bash
+# Analyser en enkelt fil
+python analyze_cli.py "sti\til\fil.txt"
+
+# Analyser flere filer
+python analyze_cli.py "fil1.txt" "fil2.pdf" "fil3.docx"
+```
+
+**Note:** Context menu integration bruger Standard Mode med alle parametre aktiveret. For Agentic Mode eller custom parametre, brug GUI'en (`python main.py`).
+
+Se `CONTEXT_MENU_GUIDE.md` for detaljeret guide og troubleshooting.
+
 ## Projekt struktur
 
 ```
@@ -133,12 +178,20 @@ ai-text-analysis-rigger/
 │   │   └── openai_provider.py    # OpenAI implementation
 │   ├── text_analyzer.py          # Standard tekstanalyse logik
 │   ├── agentic_analyzer.py       # Agentic self-verifying analyzer
+│   ├── document_reader.py        # Multi-format dokument læsning (TXT/PDF/Word)
 │   └── gui.py                    # Gradio GUI
 ├── config.py                     # Konfiguration
-├── main.py                       # Entry point
+├── main.py                       # Entry point (GUI)
+├── analyze_cli.py                # CLI entry point (context menu)
+├── analyze_file.bat              # Batch wrapper til CLI
+├── INSTALL_SENDTO.bat            # Installer til "Send To" menu
+├── CREATE_DESKTOP_SHORTCUT.bat   # Installer til desktop shortcut
 ├── requirements.txt              # Python dependencies
 ├── .env.example                  # Environment variabler eksempel
-└── README.md                     # Denne fil
+├── README.md                     # Denne fil
+├── CONTEXT_MENU_GUIDE.md         # Guide til context menu integration
+├── CLAUDE.md                     # Teknisk dokumentation
+└── GIT_SNAPSHOTS.md              # Git version control guide
 ```
 
 ## Tilføj ny AI provider
@@ -231,9 +284,10 @@ Agentic Mode implementerer et intelligent loop-system hvor AI'en fungerer som en
 - Tjek at API key'en er korrekt indtastet
 - Tjek at `LLM_PROVIDER` matcher den provider du har en key til
 
-### "Ingen .txt filer fundet"
-- Tjek at mappen indeholder .txt filer
+### "Ingen understøttede dokumenter fundet"
+- Tjek at mappen indeholder TXT, PDF eller Word filer
 - Tjek at stien er korrekt (absolut sti anbefales)
+- Understøttede formater: .txt, .pdf, .docx, .doc
 
 ### Import errors
 - Sørg for at virtual environment er aktiveret
