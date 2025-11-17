@@ -15,7 +15,7 @@ class ClaudeProvider(BaseLLMProvider):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
 
-    def analyze_text(self, text: str, parameters: Dict[str, bool]) -> Dict[str, any]:
+    def analyze_text(self, text: str, parameters: Dict[str, bool], style_guidelines: str = "") -> Dict[str, any]:
         """
         Analyserer tekst med Claude AI.
         """
@@ -32,22 +32,32 @@ class ClaudeProvider(BaseLLMProvider):
 
         aspects_text = ", ".join(analysis_aspects)
 
-        prompt = f"""Analyser følgende danske tekst for {aspects_text}.
+        # Build base prompt
+        prompt_parts = [f"Analyser følgende danske tekst for {aspects_text}."]
 
+        # Inject style guidelines if available
+        if style_guidelines:
+            prompt_parts.append("\nFølg disse retningslinjer ved analysen:")
+            prompt_parts.append(style_guidelines)
+
+        # Add response format instructions
+        prompt_parts.append("""
 Returner dit svar som JSON med følgende struktur:
-{{
+{
     "corrected_text": "Den rettede tekst her",
     "corrections": [
-        {{"type": "grammatik/stavning/struktur/klarhed", "original": "fejl", "correction": "rettelse", "explanation": "forklaring"}},
+        {"type": "grammatik/stavning/struktur/klarhed", "original": "fejl", "correction": "rettelse", "explanation": "forklaring"},
         ...
     ],
     "feedback": "Overordnet feedback om teksten"
-}}
+}
 
 Tekst til analyse:
-{text}
+""")
+        prompt_parts.append(text)
+        prompt_parts.append("\nReturner KUN JSON, ingen anden tekst.")
 
-Returner KUN JSON, ingen anden tekst."""
+        prompt = "".join(prompt_parts)
 
         try:
             message = self.client.messages.create(

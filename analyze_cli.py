@@ -9,6 +9,11 @@ from config import Config
 from src.llm_providers import ClaudeProvider, OpenAIProvider
 from src.text_analyzer import TextAnalyzer
 
+try:
+    from src.knowledge_base import KnowledgeBase
+except ImportError:
+    KnowledgeBase = None
+
 
 def main():
     # Check if files provided
@@ -44,8 +49,21 @@ def main():
         input("\nTryk Enter for at lukke...")
         sys.exit(1)
 
+    # Initialize RAG knowledge base if enabled
+    knowledge_base = None
+    if config.USE_RAG and KnowledgeBase:
+        try:
+            knowledge_base = KnowledgeBase(
+                style_guide_path=config.STYLE_GUIDE_PATH,
+                min_guidelines=config.RAG_MIN_GUIDELINES,
+                max_guidelines=config.RAG_MAX_GUIDELINES
+            )
+            print(f"RAG: Enabled ({knowledge_base.get_stats()['chunks_indexed']} guidelines)")
+        except Exception as e:
+            print(f"RAG: Disabled (fejl: {e})")
+
     # Create analyzer
-    analyzer = TextAnalyzer(provider)
+    analyzer = TextAnalyzer(provider, knowledge_base)
 
     # Default parameters (analyze everything)
     parameters = {

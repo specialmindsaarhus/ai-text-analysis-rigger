@@ -1,8 +1,13 @@
 import os
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from .llm_providers import BaseLLMProvider
 from .document_reader import DocumentReader
+
+try:
+    from .knowledge_base import KnowledgeBase
+except ImportError:
+    KnowledgeBase = None
 
 
 class TextAnalyzer:
@@ -10,9 +15,10 @@ class TextAnalyzer:
     Håndterer batch analyse af tekstfiler.
     """
 
-    def __init__(self, llm_provider: BaseLLMProvider):
+    def __init__(self, llm_provider: BaseLLMProvider, knowledge_base: Optional['KnowledgeBase'] = None):
         self.llm_provider = llm_provider
         self.doc_reader = DocumentReader()
+        self.knowledge_base = knowledge_base
 
     def find_files(self, folder_path: str) -> List[Path]:
         """
@@ -67,7 +73,13 @@ class TextAnalyzer:
         Analyserer en enkelt fil.
         """
         text, file_format = self.read_file(file_path)
-        result = self.llm_provider.analyze_text(text, parameters)
+
+        # Get relevant style guidelines if RAG is enabled
+        style_guidelines = ""
+        if self.knowledge_base:
+            style_guidelines = self.knowledge_base.get_relevant_guidelines(text)
+
+        result = self.llm_provider.analyze_text(text, parameters, style_guidelines)
         result["file_path"] = str(file_path)
         result["file_name"] = file_path.name
         result["file_format"] = file_format

@@ -1,9 +1,14 @@
 import gradio as gr
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 from .text_analyzer import TextAnalyzer
 from .agentic_analyzer import AgenticAnalyzer
 from .llm_providers import ClaudeProvider, OpenAIProvider
+
+try:
+    from .knowledge_base import KnowledgeBase
+except ImportError:
+    KnowledgeBase = None
 
 
 class TextAnalysisGUI:
@@ -11,10 +16,11 @@ class TextAnalysisGUI:
     Gradio-baseret GUI for tekstanalyse.
     """
 
-    def __init__(self, llm_provider):
+    def __init__(self, llm_provider, knowledge_base: Optional['KnowledgeBase'] = None):
         self.llm_provider = llm_provider
-        self.analyzer = TextAnalyzer(llm_provider)
-        self.agentic_analyzer = AgenticAnalyzer(llm_provider, max_iterations=3)
+        self.knowledge_base = knowledge_base
+        self.analyzer = TextAnalyzer(llm_provider, knowledge_base)
+        self.agentic_analyzer = AgenticAnalyzer(llm_provider, max_iterations=3, knowledge_base=knowledge_base)
         self.current_results = []
         self.current_mode = "standard"
 
@@ -426,7 +432,9 @@ class TextAnalysisGUI:
         return interface
 
 
-def create_gui(provider_type: str = "claude", api_key: str = None, model: str = None):
+def create_gui(provider_type: str = "claude", api_key: str = None, model: str = None,
+               use_rag: bool = True, style_guide_path: str = "style_guide.md",
+               rag_min_guidelines: int = 5, rag_max_guidelines: int = 15):
     """
     Opretter og starter GUI.
 
@@ -434,6 +442,10 @@ def create_gui(provider_type: str = "claude", api_key: str = None, model: str = 
         provider_type: "claude" eller "openai"
         api_key: API nøgle
         model: Model navn (optional)
+        use_rag: Enable RAG system for style guide integration
+        style_guide_path: Path to style guide file
+        rag_min_guidelines: Minimum number of guidelines to retrieve
+        rag_max_guidelines: Maximum number of guidelines to retrieve
     """
     if not api_key:
         raise ValueError("API nøgle er påkrævet")
@@ -446,8 +458,22 @@ def create_gui(provider_type: str = "claude", api_key: str = None, model: str = 
     else:
         raise ValueError(f"Ukendt provider type: {provider_type}")
 
+    # Initialize RAG knowledge base if enabled
+    knowledge_base = None
+    if use_rag and KnowledgeBase:
+        try:
+            knowledge_base = KnowledgeBase(
+                style_guide_path=style_guide_path,
+                min_guidelines=rag_min_guidelines,
+                max_guidelines=rag_max_guidelines
+            )
+            print(f"✓ RAG knowledge base initialized: {knowledge_base.get_stats()}")
+        except Exception as e:
+            print(f"⚠ Warning: Could not initialize RAG system: {e}")
+            print("  Continuing without style guide integration...")
+
     # Opret GUI
-    gui = TextAnalysisGUI(provider)
+    gui = TextAnalysisGUI(provider, knowledge_base)
     interface = gui.create_interface()
 
     return interface

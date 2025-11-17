@@ -94,11 +94,15 @@ The system uses an abstract provider pattern to support multiple LLM backends:
 
 **Base Interface** (`src/llm_providers/base_provider.py`):
 - `BaseLLMProvider` defines the contract all providers must implement
-- Key method: `analyze_text(text, parameters) -> Dict` returns structured analysis with:
-  - `original_text`: Input text
-  - `corrected_text`: AI-corrected version
-  - `corrections`: List of changes with type, original, correction, explanation
-  - `feedback`: General quality feedback
+- Key method: `analyze_text(text, parameters, style_guidelines="") -> Dict` returns structured analysis with:
+  - `text`: Input text to analyze
+  - `parameters`: Dict with analysis parameters (grammatik, stavning, etc.)
+  - `style_guidelines`: Optional XML-formatted guidelines from RAG system
+  - Returns dict with:
+    - `original_text`: Input text
+    - `corrected_text`: AI-corrected version
+    - `corrections`: List of changes with type, original, correction, explanation
+    - `feedback`: General quality feedback
 
 **Provider Implementations**:
 - `ClaudeProvider`: Uses Anthropic API with `anthropic.messages.create()`
@@ -135,27 +139,81 @@ The agentic loop leverages the LLM twice per iteration: once for correction, onc
 
 ### Token-Efficient Style Guide Integration (RAG)
 
-To incorporate business-specific terminology and writing styles without high token costs, the system will implement a Retrieval-Augmented Generation (RAG) pipeline.
+The system implements a Retrieval-Augmented Generation (RAG) pipeline to incorporate business-specific terminology and writing styles without high token costs.
 
 **Problem**: Naively injecting a full style guide into every LLM prompt is inefficient and costly, especially as the guide grows.
 
 **Solution**: A RAG-based approach that retrieves only the most relevant style rules for a given text and injects them into the prompt. This is more scalable, token-efficient, and provides targeted context to the AI.
 
-**Architecture**:
-- **Knowledge Source**: A `style_guide.md` file in the project root will store all custom rules, terminology, and style preferences.
-- **New Dependencies**:
-  - `sentence-transformers`: To generate vector embeddings for the style guide rules.
-  - `faiss-cpu`: A library for efficient similarity search that will serve as the local vector database.
-- **New Module (`src/knowledge_base.py`)**:
-  - A `KnowledgeBase` class will be responsible for the RAG pipeline.
-  - **On Startup**: It will load `style_guide.md`, split it into logical chunks (e.g., by rule or paragraph), and create a searchable FAISS vector index stored in memory.
-  - **On-Demand Retrieval**: It will provide a method `get_relevant_rules(text, top_k=3)` that takes the document text, searches the index for the most similar rules, and returns them.
-- **Integration**:
-  - The `KnowledgeBase` instance will be created at application startup.
-  - Before analysis, both `TextAnalyzer` and `AgenticAnalyzer` will call `get_relevant_rules()` with the document's content.
-  - The retrieved rules will be dynamically formatted and inserted into the LLM prompt, ensuring the AI has the precise, relevant context needed for its task.
+**Implementation**:
 
-This design provides a powerful way to customize the AI's behavior without the high overhead of a full client-server architecture, making it ideal for a desktop application.
+**Knowledge Source** (`style_guide.md`):
+- Located in project root
+- Uses SKILL.md pattern with YAML frontmatter and XML-structured sections
+- Sections include:
+  - `<key_phrases>`: Essential professional terminology to preserve
+  - `<terminology>`: Company-specific terms with usage context
+  - `<style_examples>`: Reference examples of professional writing
+  - `<formatting_rules>`: Placeholder formats, spacing conventions
+  - `<grammar_preferences>`: Danish language conventions
+  - `<writing_principles>`: Core principles (strength-based language, specificity, etc.)
+  - `<correction_guidelines>`: What to preserve vs. improve
+
+**RAG Module** (`src/knowledge_base.py`):
+- **KnowledgeBase class** manages the RAG pipeline
+- **Hybrid Chunking**: Splits style guide into sections + sub-items for granular retrieval
+- **Embeddings**: Uses `sentence-transformers` (paraphrase-multilingual-MiniLM-L12-v2) for multilingual Danish support
+- **Vector Index**: FAISS in-memory index for fast similarity search
+- **Auto-Rebuild**: Monitors `style_guide.md` for changes and rebuilds index automatically
+- **Adaptive Retrieval**: `get_relevant_guidelines(text)` returns 5-15 guidelines based on document length
+- **Sentence Extraction**: Extracts most relevant sentences from retrieved chunks using similarity scoring
+- **XML Formatting**: Outputs guidelines in structured XML tags for LLM consumption
+
+**Integration**:
+- **Configuration** (`config.py`):
+  - `USE_RAG`: Enable/disable RAG (default: true)
+  - `STYLE_GUIDE_PATH`: Path to style guide (default: "style_guide.md")
+  - `RAG_MIN_GUIDELINES`: Minimum guidelines for short documents (default: 5)
+  - `RAG_MAX_GUIDELINES`: Maximum guidelines for long documents (default: 15)
+
+- **Provider Updates** (`src/llm_providers/`):
+  - `BaseLLMProvider.analyze_text()` now accepts optional `style_guidelines` parameter
+  - Both `ClaudeProvider` and `OpenAIProvider` inject guidelines into prompts with Danish instructions
+
+- **Analyzer Integration**:
+  - `TextAnalyzer.__init__()` accepts optional `knowledge_base` parameter
+  - `TextAnalyzer.analyze_file()` retrieves relevant guidelines before LLM call
+  - `AgenticAnalyzer.__init__()` accepts optional `knowledge_base` parameter
+  - `AgenticAnalyzer.think_and_analyze()` retrieves guidelines for each iteration
+
+- **GUI/CLI Integration**:
+  - `main.py`: Initializes KnowledgeBase at startup if RAG enabled
+  - `analyze_cli.py`: Supports RAG for context menu and CLI usage
+  - Both display RAG status and chunk count on startup
+
+**Retrieval Flow**:
+1. Document text is analyzed
+2. `knowledge_base.get_relevant_guidelines(text)` is called
+3. Text is embedded using sentence-transformers
+4. FAISS index returns top-k most similar chunks
+5. Most relevant sentences are extracted from each chunk
+6. Guidelines are formatted as XML and injected into LLM prompt
+7. LLM receives both the document and relevant style guidelines
+
+**Example Output Format**:
+```xml
+<style_guidelines>
+<key_phrases>
+- "vi oplever" - Used when describing observations...
+- "eksekutive funktioner" - Executive functions...
+</key_phrases>
+<terminology>
+Use placeholder format {elev_navn} for student names...
+</terminology>
+</style_guidelines>
+```
+
+This design provides a powerful way to customize the AI's behavior without the high overhead of a full client-server architecture, making it ideal for a desktop application. The system is token-efficient, automatically maintains itself, and scales well as the style guide grows.
 
 ### GUI Implementation
 

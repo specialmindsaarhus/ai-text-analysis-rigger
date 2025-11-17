@@ -36,6 +36,12 @@ class Config:
         "klarhed": True
     }
 
+    # RAG (Retrieval-Augmented Generation) Settings
+    USE_RAG = os.getenv("USE_RAG", "true").lower() == "true"
+    STYLE_GUIDE_PATH = os.getenv("STYLE_GUIDE_PATH", "style_guide.md")
+    RAG_MIN_GUIDELINES = int(os.getenv("RAG_MIN_GUIDELINES", "5"))
+    RAG_MAX_GUIDELINES = int(os.getenv("RAG_MAX_GUIDELINES", "15"))
+
     @classmethod
     def get_api_key(cls):
         """Hent API key baseret på valgt provider"""

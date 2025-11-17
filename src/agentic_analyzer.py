@@ -3,11 +3,16 @@ Agentic Text Analyzer
 En selvstændig AI agent der kan iterere over sin egen analyse indtil den er tilfreds.
 """
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from pathlib import Path
 from .llm_providers import BaseLLMProvider
 from .document_reader import DocumentReader
 import json
+
+try:
+    from .knowledge_base import KnowledgeBase
+except ImportError:
+    KnowledgeBase = None
 
 
 class AgenticAnalyzer:
@@ -18,15 +23,18 @@ class AgenticAnalyzer:
     3. Verificere sit eget arbejde og iterere indtil kvaliteten er god nok
     """
 
-    def __init__(self, llm_provider: BaseLLMProvider, max_iterations: int = 3):
+    def __init__(self, llm_provider: BaseLLMProvider, max_iterations: int = 3,
+                 knowledge_base: Optional['KnowledgeBase'] = None):
         """
         Args:
             llm_provider: LLM provider til at udføre analyse
             max_iterations: Max antal iterationer (for at undgå uendelige loops)
+            knowledge_base: Optional RAG knowledge base for style guidelines
         """
         self.llm_provider = llm_provider
         self.max_iterations = max_iterations
         self.doc_reader = DocumentReader()
+        self.knowledge_base = knowledge_base
 
     def read_document(self, file_path: Path) -> Tuple[str, str]:
         """
@@ -52,7 +60,12 @@ class AgenticAnalyzer:
         """
         Step 1: LLM "tænker" og analyserer teksten.
         """
-        return self.llm_provider.analyze_text(text, parameters)
+        # Get relevant style guidelines if RAG is enabled
+        style_guidelines = ""
+        if self.knowledge_base:
+            style_guidelines = self.knowledge_base.get_relevant_guidelines(text)
+
+        return self.llm_provider.analyze_text(text, parameters, style_guidelines)
 
     def verify_quality(self, original_text: str, corrected_text: str,
                       corrections: List[Dict]) -> Tuple[bool, str, Dict]:

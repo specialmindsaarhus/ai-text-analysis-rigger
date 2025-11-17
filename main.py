@@ -30,6 +30,9 @@ def main():
     # Vis konfiguration
     print(f"Provider: {Config.LLM_PROVIDER}")
     print(f"Model: {Config.get_model()}")
+    print(f"RAG: {'Enabled' if Config.USE_RAG else 'Disabled'}")
+    if Config.USE_RAG:
+        print(f"Style Guide: {Config.STYLE_GUIDE_PATH}")
     print(f"Server: http://{Config.GRADIO_SERVER_NAME}:{Config.GRADIO_SERVER_PORT}")
     print("=" * 50)
 
@@ -37,7 +40,11 @@ def main():
     interface = create_gui(
         provider_type=Config.LLM_PROVIDER,
         api_key=Config.get_api_key(),
-        model=Config.get_model()
+        model=Config.get_model(),
+        use_rag=Config.USE_RAG,
+        style_guide_path=Config.STYLE_GUIDE_PATH,
+        rag_min_guidelines=Config.RAG_MIN_GUIDELINES,
+        rag_max_guidelines=Config.RAG_MAX_GUIDELINES
     )
 
     # Start server

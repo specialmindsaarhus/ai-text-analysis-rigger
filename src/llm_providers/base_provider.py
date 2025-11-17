@@ -12,13 +12,14 @@ class BaseLLMProvider(ABC):
         self.api_key = api_key
 
     @abstractmethod
-    def analyze_text(self, text: str, parameters: Dict[str, bool]) -> Dict[str, any]:
+    def analyze_text(self, text: str, parameters: Dict[str, bool], style_guidelines: str = "") -> Dict[str, any]:
         """
         Analyserer tekst og returnerer rettelser og feedback.
 
         Args:
             text: Teksten der skal analyseres
             parameters: Dict med analyse parametre (grammatik, stavning, etc.)
+            style_guidelines: Optional XML-formatted style guidelines from RAG system
 
         Returns:
             Dict med:
