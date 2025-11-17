@@ -151,13 +151,17 @@ The system implements a Retrieval-Augmented Generation (RAG) pipeline to incorpo
 - Located in project root
 - Uses SKILL.md pattern with YAML frontmatter and XML-structured sections
 - Sections include:
-  - `<key_phrases>`: Essential professional terminology to preserve
+  - `<key_phrases>`: Essential professional terminology to preserve (NEVER change)
   - `<terminology>`: Company-specific terms with usage context
   - `<style_examples>`: Reference examples of professional writing
   - `<formatting_rules>`: Placeholder formats, spacing conventions
   - `<grammar_preferences>`: Danish language conventions
   - `<writing_principles>`: Core principles (strength-based language, specificity, etc.)
-  - `<correction_guidelines>`: What to preserve vs. improve
+  - `<correction_guidelines>`: Explicit three-tier system:
+    - **⛔ NEVER Remove or Change**: Key phrases, professional terminology, intentional repetition
+    - **✅ Always Fix**: Grammar errors, spelling mistakes, formatting inconsistencies
+    - **💡 Consider Improving**: Only if it impedes understanding
+- **Critical Design**: The guide explicitly distinguishes between errors (to fix) and intentional professional choices (to preserve), preventing over-correction
 
 **RAG Module** (`src/knowledge_base.py`):
 - **KnowledgeBase class** manages the RAG pipeline
@@ -178,7 +182,20 @@ The system implements a Retrieval-Augmented Generation (RAG) pipeline to incorpo
 
 - **Provider Updates** (`src/llm_providers/`):
   - `BaseLLMProvider.analyze_text()` now accepts optional `style_guidelines` parameter
-  - Both `ClaudeProvider` and `OpenAIProvider` inject guidelines into prompts with Danish instructions
+  - Both `ClaudeProvider` and `OpenAIProvider` inject guidelines into prompts with explicit preservation instructions
+  - **Prompt Structure**: Guidelines are injected with strong emphasis on preservation:
+    ```
+    STILRETNINGSLINJER - VIGTIGE REGLER:
+    [XML-formatted guidelines]
+    ================================================================================
+    KRITISK VIGTIGT om stilretningslinjerne:
+    1. KEY PHRASES markeret i <key_phrases> skal ALTID bevares - fjern dem ALDRIG
+    2. Professionel terminologi i <terminology> er BEVIDSTE valg - behold dem
+    3. Formattering i <formatting_rules> skal følges præcist
+    4. Ret KUN faktiske fejl (grammatik, stavning) - ikke stilistiske valg
+    5. Hvis en frase gentages, behold den MEDMINDRE retningslinjerne specifikt siger andet
+    ```
+  - This prevents AI from "correcting" intentional professional language choices
 
 - **Analyzer Integration**:
   - `TextAnalyzer.__init__()` accepts optional `knowledge_base` parameter
