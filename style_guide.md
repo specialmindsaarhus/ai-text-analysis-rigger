@@ -164,19 +164,30 @@ om det 10 og 5 minutter før undervisningen går i gang.
 <correction_guidelines>
 **When analyzing and correcting text:**
 
-### Always Preserve
-- Key phrases: "vi oplever", "eksekutive funktioner", "initieringsevne", "fleksibilitet", "monitorering"
-- Professional terminology specific to educational/psychological assessment
-- Placeholder formatting: `{elev_navn}` style
-- Supportive, strength-based framing
+### ⛔ NEVER Remove or Change
+**These are INTENTIONAL professional choices - NOT errors:**
+- **Key phrases**: "vi oplever", "eksekutive funktioner", "initieringsevne", "fleksibilitet", "monitorering"
+  - **DO NOT** simplify or replace these with synonyms
+  - **DO NOT** remove repetitions of key phrases (e.g., "vi oplever" appearing multiple times is CORRECT)
+  - These phrases establish professional authority and observation-based assessment
+- **Professional terminology** specific to educational/psychological assessment
+  - Keep technical terms - they are required for professional documentation
+- **Placeholder formatting**: `{elev_navn}` style (with underscore)
+  - This is template syntax that must be preserved exactly
+- **Supportive, strength-based framing**
+  - "har brug for hjælp til" is preferred over deficit language
 
-### Consider Improving
-- Inconsistent placeholder formats (standardize to `{variable_navn}`)
-- Excessive repetition of phrases (especially "vi oplever" if used >3 times in short passage)
-- Comma placement not following Danish conventions
-- Sentence structure that impedes clarity
-- Missing specificity or concrete examples
-- Overly casual or overly formal language (aim for professional-yet-accessible)
+### ✅ Always Fix
+- **Inconsistent placeholder formats**: Standardize `{elev navn}` (space) → `{elev_navn}` (underscore)
+- **Comma placement** not following Danish conventions
+- **Spelling errors** in Danish (æ, ø, å)
+- **Subject-verb agreement** errors
+- **Missing punctuation** or incorrect punctuation
+
+### 💡 Consider Improving (Only if it impedes understanding)
+- Sentence structure that significantly impedes clarity
+- Missing specificity or concrete examples (add suggestions, don't rewrite)
+- Overly casual language in formal contexts
 
 ### Grammar Focus Areas
 - Danish comma rules in subordinate clauses

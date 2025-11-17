@@ -37,8 +37,20 @@ class ClaudeProvider(BaseLLMProvider):
 
         # Inject style guidelines if available
         if style_guidelines:
-            prompt_parts.append("\nFølg disse retningslinjer ved analysen:")
+            prompt_parts.append("\n" + "="*80)
+            prompt_parts.append("\nSTILRETNINGSLINJER - VIGTIGE REGLER:")
             prompt_parts.append(style_guidelines)
+            prompt_parts.append("\n" + "="*80)
+            prompt_parts.append("""
+KRITISK VIGTIGT om stilretningslinjerne:
+1. KEY PHRASES markeret i <key_phrases> skal ALTID bevares - fjern dem ALDRIG
+2. Professionel terminologi i <terminology> er BEVIDSTE valg - behold dem
+3. Formattering i <formatting_rules> skal følges præcist
+4. Ret KUN faktiske fejl (grammatik, stavning) - ikke stilistiske valg
+5. Hvis en frase gentages (f.eks. "vi oplever"), behold den MEDMINDRE retningslinjerne specifikt siger at reducere gentagelser
+
+Husk: Disse retningslinjer definerer den ØNSKEDE stil - overhold dem strengt!
+""")
 
         # Add response format instructions
         prompt_parts.append("""
